@@ -81,7 +81,7 @@ mvn allure:serve       # opens report in browser automatically
 # Or generate static files:
 mvn allure:report      # → target/allure-report/index.html
 ```
-
+![Allure Report Example](src/test/resources/readme-data/todomvc-report-example.png)
 ---
 
 ## Test Coverage
