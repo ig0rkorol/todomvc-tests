@@ -1,7 +1,7 @@
+# TodoMVC Selenide + Allure Test Suite
 [![UI Tests](https://github.com/ig0rkorol/todomvc-tests/actions/workflows/ci.yml/badge.svg)](https://github.com/ig0rkorol/todomvc-tests/actions/workflows/ci.yml)
 [![Allure Report](https://img.shields.io/badge/Allure-Report-orange)](https://ig0rkorol.github.io/todomvc-tests/)
 
-# TodoMVC Selenide + Allure Test Suite
 
 Automated UI tests for [TodoMVC React](https://todomvc.com/examples/react/dist/)  
 built with **Selenide 7**, **JUnit 5**, and **Allure 2**.
