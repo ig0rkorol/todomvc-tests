@@ -55,6 +55,22 @@ mvn test -Dapp.url=https://todomvc.com/examples/react/dist/
 ```
 
 ---
+## Parallel Execution
+
+Tests run in parallel at the **class level** — each test class gets its own thread and its own browser instance. Methods within a class run sequentially to avoid shared-state race conditions.
+
+```bash
+# Default — 4 parallel browser forks
+mvn clean test
+
+# Reduce forks on slower machines
+mvn clean test -Dparallel.forks=2
+
+# Single thread — useful for debugging flaky tests
+mvn clean test -Dparallel.forks=1
+```
+
+
 
 ## Generate Allure Report
 
