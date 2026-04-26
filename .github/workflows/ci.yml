@@ -1,0 +1,94 @@
+name: UI Tests — TodoMVC
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+  schedule:
+    - cron: '0 6 * * 1-5'   # every weekday at 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      parallel_forks:
+        description: 'Number of parallel browser forks'
+        required: false
+        default: '4'
+      headless:
+        description: 'Run headless'
+        required: false
+        default: 'true'
+
+env:
+  JAVA_VERSION: '17'
+  MAVEN_OPTS: '-Xmx2048m'    # more memory for parallel browsers
+
+jobs:
+  test:
+    name: Run Selenide Tests (parallel)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Install Google Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Verify Chrome version
+        run: google-chrome --version
+
+      - name: Run tests in parallel
+        run: |
+          mvn clean test \
+            -Dheadless=${{ github.event.inputs.headless || 'true' }} \
+            -Dbrowser=chrome \
+            -Dparallel.forks=${{ github.event.inputs.parallel_forks || '4' }} \
+            -Dapp.url=https://todomvc.com/examples/react/dist/ \
+            --no-transfer-progress
+        continue-on-error: true
+
+      - name: Upload Allure results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-results
+          path: target/allure-results/
+          retention-days: 30
+
+      - name: Upload test logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-logs
+          path: target/logs/
+          retention-days: 7
+
+      - name: Generate Allure report
+        uses: simple-elf/allure-report-action@v1
+        if: always()
+        with:
+          allure_results: target/allure-results
+          allure_report: target/allure-report
+          gh_pages: gh-pages
+          allure_history: allure-history
+
+      - name: Deploy Allure report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        if: github.ref == 'refs/heads/main' && always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: target/allure-report
+
+      - name: Fail build if tests failed
+        if: failure()
+        run: exit 1

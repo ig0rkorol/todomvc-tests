@@ -1,0 +1,43 @@
+# ── Maven ─────────────────────────────────────────────────────────────────────
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# ── IDE — IntelliJ IDEA ───────────────────────────────────────────────────────
+.idea/
+.allure/
+*.iml
+*.iws
+*.ipr
+
+out/
+
+# ── IDE — Eclipse ─────────────────────────────────────────────────────────────
+.eclipse/
+.settings/
+.classpath
+.project
+bin/
+
+# ── IDE — VS Code ─────────────────────────────────────────────────────────────
+.vscode/
+
+# ── Allure ────────────────────────────────────────────────────────────────────
+allure-results/
+allure-report/
+
+# ── Selenide screenshots & downloads ──────────────────────────────────────────
+build/reports/
+screenshots/
+downloads/
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
