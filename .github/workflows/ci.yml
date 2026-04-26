@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ main, master ]
   schedule:
-    - cron: '0 6 * * 1-5'   # every weekday at 06:00 UTC
+    - cron: '0 6 * * 1-5'
   workflow_dispatch:
     inputs:
       parallel_forks:
@@ -20,12 +20,15 @@ on:
 
 env:
   JAVA_VERSION: '17'
-  MAVEN_OPTS: '-Xmx2048m'    # more memory for parallel browsers
+  MAVEN_OPTS: '-Xmx2048m'
 
 jobs:
   test:
     name: Run Selenide Tests (parallel)
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -63,6 +66,7 @@ jobs:
           name: allure-results
           path: target/allure-results/
           retention-days: 30
+          if-no-files-found: warn
 
       - name: Upload test logs
         uses: actions/upload-artifact@v4
@@ -71,24 +75,40 @@ jobs:
           name: test-logs
           path: target/logs/
           retention-days: 7
+          if-no-files-found: warn
 
-      - name: Generate Allure report
-        uses: simple-elf/allure-report-action@v1
+      - name: Upload surefire reports
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          allure_results: target/allure-results
-          allure_report: target/allure-report
-          gh_pages: gh-pages
-          allure_history: allure-history
+          name: surefire-reports
+          path: target/surefire-reports/
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Install Allure CLI
+        if: always()
+        run: |
+          curl -o allure.tgz -L https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-2.29.0.tgz
+          tar -zxvf allure.tgz
+          sudo mv allure-2.29.0 /opt/allure
+          sudo ln -s /opt/allure/bin/allure /usr/bin/allure
+          allure --version
+
+      - name: Generate Allure report
+        if: always()
+        run: allure generate target/allure-results --clean -o target/allure-report
 
       - name: Deploy Allure report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
-        if: github.ref == 'refs/heads/main' && always()
+        if: always() && github.ref == 'refs/heads/main'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: target/allure-report
 
       - name: Fail build if tests failed
-        if: failure()
-        run: exit 1
+        run: |
+          if [ -f target/surefire-reports/*.txt ]; then
+            grep -q "FAILURE\|ERROR" target/surefire-reports/*.txt && exit 1 || exit 0
+          fi
